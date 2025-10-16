@@ -1,11 +1,5 @@
 package sheduler
 
-type Task struct {
-	ID     uint16
-	Status TaskStatus
-	Stamps []uint32
-}
-
 type TaskStatus uint8
 
 const (
@@ -15,3 +9,12 @@ const (
 	StatusDone
 	StatusAborted
 )
+
+type Operation func(index int, id uint16, status TaskStatus, stamp uint32)
+
+type Task struct {
+	ID        uint16
+	Status    TaskStatus
+	Stamps    []uint32
+	Operation Operation
+}
