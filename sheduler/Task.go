@@ -1,5 +1,7 @@
 package sheduler
 
+import "sync"
+
 type TaskStatus uint8
 
 const (
@@ -17,4 +19,5 @@ type Task struct {
 	Status    TaskStatus
 	Stamps    []uint32
 	Operation Operation
+	mu        sync.RWMutex // Mutex for thread-safe status access
 }

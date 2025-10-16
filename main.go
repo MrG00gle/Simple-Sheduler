@@ -3,49 +3,45 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/MrG00gle/Simple-Sheduler/sheduler"
 )
 
 func generateTimestamps(numTimestamps int, minDuration uint32, maxSpread uint32) (timestamps []uint32) {
-	// Number of timestamps to generate
 	timestamps = make([]uint32, numTimestamps)
-
-	// Set starting timestamp to 0
 	timestamps[0] = 0
 
-	// Generate timestamps with random durations
-	// Adjust range to fit within uint32 (0 to 4,294,967,295)
-	//minDuration := uint32(100)    // Minimum duration in milliseconds
-	//maxSpread := uint32(1000)     // Maximum additional spread (e.g., 100 to 1100 ms
 	for i := 1; i < numTimestamps; i++ {
-		// Generate random duration
 		duration := uint32(rand.Intn(int(maxSpread))) + minDuration
 		newTimestamp := timestamps[i-1] + duration
-		if newTimestamp < timestamps[i-1] { // Overflow chek
-			newTimestamp = 4294967295 // Set Cap of uint32
+		if newTimestamp < timestamps[i-1] { // Overflow check
+			fmt.Printf("Warning: Timestamp overflow at index %d, capping at max uint32\n", i)
+			newTimestamp = 4294967295 // Max uint32
 		}
 		timestamps[i] = newTimestamp
 	}
-
 	return timestamps
 }
 
-func generateTasks(tasknumber uint16, timestamps []uint32, operation sheduler.Operation) []sheduler.Task {
-	tasks := make([]sheduler.Task, tasknumber)
-	for i := 0; i < int(tasknumber); i++ {
-		tasks[i] = sheduler.Task{ID: uint16(i), Stamps: timestamps, Operation: operation}
+func generateTasks(taskNumber uint16, timestamps []uint32, operation sheduler.Operation) []*sheduler.Task {
+	tasks := make([]*sheduler.Task, taskNumber)
+	for i := 0; i < int(taskNumber); i++ {
+		tasks[i] = &sheduler.Task{ID: uint16(i), Stamps: timestamps, Operation: operation}
 	}
 	return tasks
 }
 
 func oper(index int, id uint16, status sheduler.TaskStatus, stamp uint32) {
-	fmt.Println("Index:", index, "ID", id, "Status", status, "Stamp", stamp)
+	fmt.Printf("Index: %d, ID: %d, Status: %v, Stamp: %d\n", index, id, status, stamp)
 }
 
 func main() {
+	// Seed random number generator for reproducibility
+	rand.Seed(time.Now().UnixNano())
+
 	shed := sheduler.Sheduler{}
-	timestamps := generateTimestamps(50, 100, 1000)
+	timestamps := generateTimestamps(100, 100, 2000)
 	operation := sheduler.Operation(oper)
 	tasks := generateTasks(10, timestamps, operation)
 
@@ -54,4 +50,19 @@ func main() {
 	}
 
 	shed.Start()
+
+	//go shed.Start()
+
+	//Example: Pause and resume the first task
+	//if len(tasks) > 0 {
+	//	time.Sleep(500 * time.Millisecond) // Wait for some tasks to start
+	//	shed.PauseThread(tasks[0])
+	//	fmt.Println("Paused task 0")
+	//	time.Sleep(500 * time.Millisecond)
+	//	shed.ResumeThread(tasks[0])
+	//	fmt.Println("Resumed task 0")
+	//}
+
+	// Wait for all tasks to complete (optional, for demonstration)
+	//time.Sleep(10 * time.Second)
 }
